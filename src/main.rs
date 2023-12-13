@@ -1,17 +1,28 @@
 use coap::{CoAPClient};
 use serde_json::json;
 use rand::Rng;
+use local_ip_address::local_ip;
 
 fn main() {
     let url_register = "coap://127.0.0.1:5683/sensor/register";
     let url_read = "coap://127.0.0.1:5683/sensor";
 
+    let mut sensor_ip_address = String::new();
     let sensor_type = "current";
+
+    match local_ip() {
+        Ok(ip) => {
+            sensor_ip_address.push_str(ip.to_string().as_str());
+        }
+        Err(_) => panic!("Unable to get local IP address")
+    }
+
+    println!("Local IP address: {}", sensor_ip_address);
 
     let register_params = json! {
         {
             "sensor_type": sensor_type,
-            "ip_address": "127.0.0.1"
+            "ip_address": sensor_ip_address
         }
     }.to_string().as_bytes().to_vec();
 
