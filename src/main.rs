@@ -28,7 +28,7 @@ fn main() {
     loop {
         println!("Reading sensor: {}", new_sensor);
 
-        let sensor_value = rand::thread_rng().gen_range(0.0f32..20.0f32);
+        let sensor_value = rand::thread_rng().gen_range(0.0f32..20.0f32).to_string();
 
         let read_params = json! {
             {
