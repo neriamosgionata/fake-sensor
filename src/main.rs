@@ -18,6 +18,11 @@ fn main() {
     let response_register = CoAPClient::post(url_register, register_params).unwrap();
     let new_sensor = String::from_utf8(response_register.message.payload).unwrap();
 
+    if new_sensor == "KO" {
+        println!("Error registering sensor");
+        return;
+    }
+
     let sensor_id = new_sensor.parse::<i32>().unwrap();
 
     loop {
