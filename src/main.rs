@@ -48,9 +48,26 @@ fn main() {
             }
         }.to_string().as_bytes().to_vec();
 
-        let response_read = CoAPClient::post(url_read, read_params).unwrap();
-        println!("Server reply: {}", String::from_utf8(response_read.message.payload).unwrap());
+        match CoAPClient::post(url_read, read_params) {
+            Ok(response_read) => {
+                println!("Server reply: {}", String::from_utf8(response_read.message.payload).unwrap());
+                std::thread::sleep(std::time::Duration::from_secs(3));
+            }
+            Err(e) => {
+                println!("Server error: {:?}", e);
+                println!("Waiting for server to comeback");
 
-        std::thread::sleep(std::time::Duration::from_secs(3));
+                let mut i = 10;
+
+                loop {
+                    if i == 0 {
+                        break;
+                    }
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                    println!("{}...", i);
+                    i -= 1;
+                }
+            }
+        }
     }
 }
