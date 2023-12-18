@@ -3,9 +3,11 @@ use serde_json::json;
 use rand::Rng;
 use local_ip_address::local_ip;
 
+
 const SENSOR_TYPE_CURRENT: &str = "current";
 const SENSOR_TYPE_TEMPERATURE: &str = "temperature";
 const SENSOR_TYPE_HUMIDITY: &str = "humidity";
+const SENSOR_TYPE_UNKNOWN: &str = "unknown";
 
 fn main() {
     let url_register = "coap://127.0.0.1:5683/sensor/register";
