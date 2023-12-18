@@ -3,10 +3,15 @@ use serde_json::json;
 use rand::Rng;
 use local_ip_address::local_ip;
 
-
 const SENSOR_TYPE_CURRENT: &str = "current";
 const SENSOR_TYPE_TEMPERATURE: &str = "temperature";
 const SENSOR_TYPE_HUMIDITY: &str = "humidity";
+const SENSOR_TYPE_PRESSURE: &str = "pressure";
+const SENSOR_TYPE_WIND_SPEED: &str = "wind_speed";
+const SENSOR_TYPE_WIND_DIRECTION: &str = "wind_direction";
+const SENSOR_TYPE_RAIN: &str = "rain";
+const SENSOR_TYPE_UV: &str = "uv";
+const SENSOR_TYPE_SOLAR_RADIATION: &str = "solar_radiation";
 const SENSOR_TYPE_UNKNOWN: &str = "unknown";
 
 fn main() {
@@ -43,36 +48,40 @@ fn main() {
     let sensor_id = new_sensor.parse::<i32>().unwrap();
 
     loop {
-        println!("Reading sensor: {}", new_sensor);
+        read_sensor(&new_sensor, sensor_id, url_read);
+    }
+}
 
-        let sensor_value = rand::thread_rng().gen_range(0.0f32..20.0f32).to_string();
+fn read_sensor(new_sensor: &String, sensor_id: i32, url_read: &str) {
+    println!("Reading sensor: {}", new_sensor);
 
-        let read_params = json! {
+    let sensor_value = rand::thread_rng().gen_range(0.0f32..20.0f32).to_string();
+
+    let read_params = json! {
             {
                 "sensor_id": sensor_id,
                 "sensor_value": sensor_value
             }
         }.to_string().as_bytes().to_vec();
 
-        match CoAPClient::post(url_read, read_params) {
-            Ok(response_read) => {
-                println!("Server reply: {}", String::from_utf8(response_read.message.payload).unwrap());
-                std::thread::sleep(std::time::Duration::from_secs(3));
-            }
-            Err(e) => {
-                println!("Server error: {:?}", e);
-                println!("Waiting for server to comeback");
+    match CoAPClient::post(url_read, read_params) {
+        Ok(response_read) => {
+            println!("Server reply: {}", String::from_utf8(response_read.message.payload).unwrap());
+            std::thread::sleep(std::time::Duration::from_secs(3));
+        }
+        Err(e) => {
+            println!("Server error: {:?}", e);
+            println!("Waiting for server to comeback");
 
-                let mut i = 10;
+            let mut i = 10;
 
-                loop {
-                    if i == 0 {
-                        break;
-                    }
-                    std::thread::sleep(std::time::Duration::from_secs(1));
-                    println!("{}...", i);
-                    i -= 1;
+            loop {
+                if i == 0 {
+                    break;
                 }
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                println!("{}...", i);
+                i -= 1;
             }
         }
     }
