@@ -2,17 +2,7 @@ use coap::{CoAPClient};
 use serde_json::json;
 use rand::Rng;
 use local_ip_address::local_ip;
-
-const SENSOR_TYPE_CURRENT: &str = "current";
-const SENSOR_TYPE_TEMPERATURE: &str = "temperature";
-const SENSOR_TYPE_HUMIDITY: &str = "humidity";
-const SENSOR_TYPE_PRESSURE: &str = "pressure";
-const SENSOR_TYPE_WIND_SPEED: &str = "wind_speed";
-const SENSOR_TYPE_WIND_DIRECTION: &str = "wind_direction";
-const SENSOR_TYPE_RAIN: &str = "rain";
-const SENSOR_TYPE_UV: &str = "uv";
-const SENSOR_TYPE_SOLAR_RADIATION: &str = "solar_radiation";
-const SENSOR_TYPE_UNKNOWN: &str = "unknown";
+use fake_sensor::sensor_types::SENSOR_TYPE_CURRENT;
 
 fn main() {
     let url_register = "coap://127.0.0.1:5683/sensor/register";
