@@ -1,15 +1,17 @@
-use coap::{CoAPClient};
+use std::thread::spawn;
 use serde_json::json;
 use rand::Rng;
 use local_ip_address::local_ip;
+use fake_sensor::{CoAPClient, Server};
 use fake_sensor::sensor_types::SENSOR_TYPE_CURRENT;
+use tokio::runtime::Runtime;
 
 fn main() {
     let url_register = "coap://127.0.0.1:5683/sensor/register";
     let url_read = "coap://127.0.0.1:5683/sensor";
 
     let mut sensor_ip_address = String::new();
-    let sensor_port = 5683i16;
+    let sensor_port = 5685i16;
     let sensor_type = SENSOR_TYPE_CURRENT;
 
     match local_ip() {
@@ -24,8 +26,8 @@ fn main() {
     let register_params = json! {
         {
             "sensor_type": sensor_type,
-            "port": sensor_port,
             "ip_address": sensor_ip_address,
+            "port": sensor_port,
             "online": true,
         }
     }.to_string().as_bytes().to_vec();
@@ -39,6 +41,12 @@ fn main() {
     }
 
     let sensor_id = new_sensor.parse::<i32>().unwrap();
+
+    spawn(move || {
+        Runtime::new()
+            .unwrap()
+            .block_on(run_server(sensor_ip_address, sensor_port));
+    });
 
     loop {
         read_sensor(&new_sensor, sensor_id, url_read);
@@ -78,4 +86,28 @@ fn read_sensor(new_sensor: &String, sensor_id: i32, url_read: &str) {
             }
         }
     }
+}
+
+async fn run_server(actuator_ip_address: String, actuator_port: i16) {
+    let address = actuator_ip_address + ":" + actuator_port.to_string().as_str();
+
+    println!("Running server on {}", address);
+
+    let mut server = Server::new(address).unwrap();
+
+    server.run(
+        |request| async move {
+            println!("HEALTH CHECK");
+
+            match request.response {
+                Some(mut message) => {
+                    message.message.payload = b"ON".to_vec();
+                    Some(message)
+                }
+                _ => None,
+            }
+        },
+    )
+        .await
+        .expect("Failed to create server");
 }
