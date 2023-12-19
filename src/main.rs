@@ -25,7 +25,8 @@ fn main() {
         {
             "sensor_type": sensor_type,
             "port": sensor_port,
-            "ip_address": sensor_ip_address
+            "ip_address": sensor_ip_address,
+            "online": true,
         }
     }.to_string().as_bytes().to_vec();
 
