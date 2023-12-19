@@ -9,6 +9,7 @@ fn main() {
     let url_read = "coap://127.0.0.1:5683/sensor";
 
     let mut sensor_ip_address = String::new();
+    let sensor_port = 5683i16;
     let sensor_type = SENSOR_TYPE_CURRENT;
 
     match local_ip() {
@@ -23,6 +24,7 @@ fn main() {
     let register_params = json! {
         {
             "sensor_type": sensor_type,
+            "port": sensor_port,
             "ip_address": sensor_ip_address
         }
     }.to_string().as_bytes().to_vec();
