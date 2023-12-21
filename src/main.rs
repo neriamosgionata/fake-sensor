@@ -99,9 +99,17 @@ async fn run_server(actuator_ip_address: String, actuator_port: i16) {
         |request| async move {
             println!("HEALTH CHECK");
 
+            let payload = String::from_utf8(request.message.payload.clone()).unwrap();
+
+            let mut return_payload = String::from("ON");
+
+            if payload == "READ" {
+                return_payload = rand::thread_rng().gen_range(0.0f32..20.0f32).to_string();
+            }
+
             match request.response {
                 Some(mut message) => {
-                    message.message.payload = b"ON".to_vec();
+                    message.message.payload = return_payload.as_bytes().to_vec();
                     Some(message)
                 }
                 _ => None,
