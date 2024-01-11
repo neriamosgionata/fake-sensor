@@ -1,3 +1,4 @@
+use std::fs::{read_to_string, write};
 use std::thread::spawn;
 use serde_json::json;
 use rand::Rng;
@@ -32,13 +33,40 @@ fn main() {
         }
     }.to_string().as_bytes().to_vec();
 
-    let response_register = CoAPClient::post(url_register, register_params).unwrap();
+    let response_register = CoAPClient::post(url_register, register_params.clone()).unwrap();
     let new_sensor = String::from_utf8(response_register.message.payload).unwrap();
 
     if new_sensor == "KO" {
         println!("Error registering sensor");
         return;
     }
+
+    spawn(move || {
+        loop {
+            let time = read_to_string(".time").unwrap_or_else(|_| "0".to_string());
+            let time_as_int = time.parse::<u64>().unwrap_or_else(|_| 0);
+
+            if time_as_int > 60 {
+                println!("Actuator offline, trying to re-register");
+
+                let response_register = CoAPClient::post(url_register, register_params.clone());
+
+                match response_register {
+                    Ok(_) => {
+                        println!("Actuator re-registered");
+                        write(".time", 0u64.to_string()).unwrap_or_else(|_| {});
+                    }
+                    Err(_) => {
+                        std::thread::sleep(std::time::Duration::from_secs(59));
+                    }
+                }
+            } else {
+                write(".time", (time_as_int + 1).to_string()).unwrap_or_else(|_| {});
+            }
+
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        }
+    });
 
     let sensor_id = new_sensor.parse::<i32>().unwrap();
 
@@ -97,8 +125,6 @@ async fn run_server(actuator_ip_address: String, actuator_port: i16) {
 
     server.run(
         |request| async move {
-            println!("HEALTH CHECK");
-
             let payload = String::from_utf8(request.message.payload.clone()).unwrap();
 
             let mut return_payload = String::from("ON");
@@ -106,6 +132,8 @@ async fn run_server(actuator_ip_address: String, actuator_port: i16) {
             if payload == "READ" {
                 return_payload = rand::thread_rng().gen_range(0.0f32..20.0f32).to_string();
             }
+
+            write(".time", 0u64.to_string()).unwrap_or_else(|_| {});
 
             match request.response {
                 Some(mut message) => {
