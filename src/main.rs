@@ -47,13 +47,13 @@ fn main() {
             let time_as_int = time.parse::<u64>().unwrap_or_else(|_| 0);
 
             if time_as_int > 60 {
-                println!("Actuator offline, trying to re-register");
+                println!("Sensor offline, trying to re-register");
 
                 let response_register = CoAPClient::post(url_register, register_params.clone());
 
                 match response_register {
                     Ok(_) => {
-                        println!("Actuator re-registered");
+                        println!("Sensor re-registered");
                         write(".time", 0u64.to_string()).unwrap_or_else(|_| {});
                     }
                     Err(_) => {
