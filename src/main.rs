@@ -1,4 +1,4 @@
-use std::fs::{read_to_string, write};
+use std::fs::{write};
 use std::thread::spawn;
 use serde_json::json;
 use rand::Rng;
