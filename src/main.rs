@@ -41,33 +41,6 @@ fn main() {
         return;
     }
 
-    spawn(move || {
-        loop {
-            let time = read_to_string(".time").unwrap_or_else(|_| "0".to_string());
-            let time_as_int = time.parse::<u64>().unwrap_or_else(|_| 0);
-
-            if time_as_int > 60 {
-                println!("Sensor offline, trying to re-register");
-
-                let response_register = CoAPClient::post(url_register, register_params.clone());
-
-                match response_register {
-                    Ok(_) => {
-                        println!("Sensor re-registered");
-                        write(".time", 0u64.to_string()).unwrap_or_else(|_| {});
-                    }
-                    Err(_) => {
-                        std::thread::sleep(std::time::Duration::from_secs(59));
-                    }
-                }
-            } else {
-                write(".time", (time_as_int + 1).to_string()).unwrap_or_else(|_| {});
-            }
-
-            std::thread::sleep(std::time::Duration::from_secs(1));
-        }
-    });
-
     let sensor_id = new_sensor.parse::<i32>().unwrap();
 
     spawn(move || {
@@ -77,11 +50,36 @@ fn main() {
     });
 
     loop {
-        read_sensor(&new_sensor, sensor_id, url_read);
+        read_sensor(&new_sensor, sensor_id, url_read, url_register, register_params.clone());
     }
 }
 
-fn read_sensor(new_sensor: &String, sensor_id: i32, url_read: &str) {
+fn retry(url_register: &str, register_params: Vec<u8>) {
+    let mut i = 10;
+
+    loop {
+        if i == 0 {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        println!("{}...", i);
+        i -= 1;
+    }
+
+    let response_register = CoAPClient::post(url_register, register_params.clone());
+
+    match response_register {
+        Ok(_) => {
+            println!("Sensor re-registered");
+            write(".time", 0u64.to_string()).unwrap_or_else(|_| {});
+        }
+        Err(_) => {
+            std::thread::sleep(std::time::Duration::from_secs(59));
+        }
+    }
+}
+
+fn read_sensor(new_sensor: &String, sensor_id: i32, url_read: &str, url_register: &str, register_params: Vec<u8>) {
     println!("Reading sensor: {}", new_sensor);
 
     let sensor_value = rand::thread_rng().gen_range(0.0f32..20.0f32).to_string();
@@ -95,23 +93,19 @@ fn read_sensor(new_sensor: &String, sensor_id: i32, url_read: &str) {
 
     match CoAPClient::post(url_read, read_params) {
         Ok(response_read) => {
-            println!("Server reply: {}", String::from_utf8(response_read.message.payload).unwrap());
+            let reply = String::from_utf8(response_read.message.payload).unwrap();
+            println!("Server reply: {}", reply);
             std::thread::sleep(std::time::Duration::from_secs(3));
+
+            if reply == "KO" {
+                retry(url_register, register_params.clone());
+            }
         }
         Err(e) => {
             println!("Server error: {:?}", e);
             println!("Waiting for server to comeback");
 
-            let mut i = 10;
-
-            loop {
-                if i == 0 {
-                    break;
-                }
-                std::thread::sleep(std::time::Duration::from_secs(1));
-                println!("{}...", i);
-                i -= 1;
-            }
+            retry(url_register, register_params.clone());
         }
     }
 }
