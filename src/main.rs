@@ -95,11 +95,12 @@ fn read_sensor(new_sensor: &String, sensor_id: i32, url_read: &str, url_register
         Ok(response_read) => {
             let reply = String::from_utf8(response_read.message.payload).unwrap();
             println!("Server reply: {}", reply);
-            std::thread::sleep(std::time::Duration::from_secs(3));
 
-            if reply == "KO" {
+            if reply.contains("KO") {
                 retry(url_register, register_params.clone());
             }
+
+            std::thread::sleep(std::time::Duration::from_secs(3));
         }
         Err(e) => {
             println!("Server error: {:?}", e);
