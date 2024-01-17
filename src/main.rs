@@ -1,4 +1,3 @@
-use std::fs::{write};
 use std::thread::spawn;
 use serde_json::json;
 use rand::Rng;
@@ -71,7 +70,6 @@ fn retry(url_register: &str, register_params: Vec<u8>) {
     match response_register {
         Ok(_) => {
             println!("Sensor re-registered");
-            write(".time", 0u64.to_string()).unwrap_or_else(|_| {});
         }
         Err(_) => {
             std::thread::sleep(std::time::Duration::from_secs(59));
@@ -127,8 +125,6 @@ async fn run_server(actuator_ip_address: String, actuator_port: i16) {
             if payload == "READ" {
                 return_payload = rand::thread_rng().gen_range(0.0f32..20.0f32).to_string();
             }
-
-            write(".time", 0u64.to_string()).unwrap_or_else(|_| {});
 
             match request.response {
                 Some(mut message) => {
