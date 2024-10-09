@@ -7,11 +7,11 @@ use fake_sensor::sensor_types::SENSOR_TYPE_CURRENT;
 use tokio::runtime::Runtime;
 
 fn main() {
-    let url_register = "coap://127.0.0.1:5683/sensor/register";
-    let url_read = "coap://127.0.0.1:5683/sensor";
+    let url_register = "coap://127.0.0.1:8683/sensor/register";
+    let url_read = "coap://127.0.0.1:8683/sensor";
 
     let mut sensor_ip_address = String::new();
-    let sensor_port = 5685i16;
+    let sensor_port = 8685i16;
     let sensor_type = SENSOR_TYPE_CURRENT;
 
     match local_ip() {
