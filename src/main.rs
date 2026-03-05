@@ -3,7 +3,6 @@ use serde_json::json;
 use rand::Rng;
 use local_ip_address::local_ip;
 use fake_sensor::{CoAPClient, Server};
-use fake_sensor::sensor_types::SENSOR_TYPE_CURRENT;
 use tokio::runtime::Runtime;
 
 fn main() {
@@ -11,8 +10,13 @@ fn main() {
     let url_read = "coap://127.0.0.1:8683/sensor";
 
     let mut sensor_ip_address = String::new();
-    let sensor_port = 8685i16;
-    let sensor_type = SENSOR_TYPE_CURRENT;
+    let sensor_port: i16 = std::env::args()
+        .nth(1)
+        .unwrap_or_else(|| "8685".to_string())
+        .parse()
+        .expect("Invalid port number");
+    let sensor_type_arg = std::env::args().nth(2).unwrap_or_else(|| "current".to_string());
+    let sensor_type: &str = Box::leak(sensor_type_arg.into_boxed_str());
 
     match local_ip() {
         Ok(ip) => {
